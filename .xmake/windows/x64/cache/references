@@ -1,0 +1,8 @@
+{
+    packages = {
+        [[C:\Users\marco\AppData\Local\.xmake\packages\c\cxxopts\v3.2.1\6ae2607e8bee409cac444ba91f947089]],
+        [[C:\Users\marco\AppData\Local\.xmake\packages\f\fmt\11.0.2\25a92bc821c94814be9ff4b741cad0ff]],
+        [[C:\Users\marco\AppData\Local\.xmake\packages\o\opengl\latest\ed2c32513a2545a6b7dc2e7f3710cf08]],
+        [[C:\Users\marco\AppData\Local\.xmake\packages\l\libsdl\2.30.5\89bc8f0edd2d435a8f78cd0b8e76f857]]
+    }
+}
