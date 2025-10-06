@@ -1,4 +1,4 @@
-# .xmake
-# .vscode
+.xmake
+.vscode
 build
 app
