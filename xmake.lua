@@ -38,6 +38,36 @@ target("imgui-sdl2")
   add_packages(table.unpack(project_libs))
   set_targetdir("./app")
 
+target("core")
+  set_kind("static")
+  add_files("src/**/*.cpp")
+  add_packages(table.unpack(project_libs))
+  set_targetdir("./app")
+
+target("entities")
+  set_kind("static")
+  add_files("src/**/*.cpp")
+  add_packages(table.unpack(project_libs))
+  set_targetdir("./app")
+
+target("rendering")
+  set_kind("static")
+  add_files("src/**/*.cpp")
+  add_packages(table.unpack(project_libs))
+  set_targetdir("./app")
+
+target("utils")
+  set_kind("static")
+  add_files("src/**/*.cpp")
+  add_packages(table.unpack(project_libs))
+  set_targetdir("./app")
+
+target("world")
+  set_kind("static")
+  add_files("src/**/*.cpp")
+  add_packages(table.unpack(project_libs))
+  set_targetdir("./app")
+
 -- main project executable
 target("app")
   set_kind("binary")
@@ -45,6 +75,11 @@ target("app")
   add_packages(table.unpack(project_libs))
   add_deps("imgui")
   add_deps("imgui-sdl2")
+  add_deps("core")
+  add_deps("entities")
+  add_deps("rendering")
+  add_deps("utils")
+  add_deps("world")
   set_targetdir("./app")
 
 -- If you want to known more usage about xmake, please see https://xmake.io
