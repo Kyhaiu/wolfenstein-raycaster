@@ -1,11 +1,12 @@
 #pragma once // Garante que o arquivo seja incluído apenas uma vez
 
-#include <SDL.h>               // Biblioteca SDL para renderização
-#include <world/map.hpp>       // Inclui a classe Map
-#include <entities/player.hpp> // Inclui a classe Player
+#include <SDL.h> // Biblioteca SDL para renderização
 
-#include <utils/mathUtils.hpp> // Inclui os métodos matematicos
-#include <core/constants.hpp>  // Inclui as constantes
+#include <world/map.hpp>         // Inclui a classe Map
+#include <rendering/texture.hpp> // Inclui o gerenciador de texturas
+#include <entities/player.hpp>   // Inclui a classe Player
+#include <utils/mathUtils.hpp>   // Inclui os métodos matematicos
+#include <core/constants.hpp>    // Inclui as constantes
 
 #include <cmath>    // Para funções matemáticas (seno, cosseno, etc.)
 #include <iostream> // Para mensagens de depuração, se necessário
@@ -29,9 +30,13 @@ public:
   // Renderiza a visão 3D com base nas distâncias dos raios
   void render3DView(SDL_Renderer *renderer) const;
 
+  // Retorna a referencia da classe de gerenciamento de textura, necessário para
+  TextureManager &getTextureManager() { return m_textureManager; }
+
 private:
-  const Map &m_map;       // Referência ao mapa do mundo
-  const Player &m_player; // Referência ao jogador, origem dos raios
+  const Map &m_map;                // Referência ao mapa do mundo
+  const Player &m_player;          // Referência ao jogador, origem dos raios
+  TextureManager m_textureManager; // Gerenciador de texturas do jogo
 
   // =====================
   // Estrutura interna RayHit

@@ -45,6 +45,21 @@ bool Game::initialize()
     return false;
   }
 
+  // --- Carrega texturas ---
+  // Podia ser melhor, porém né...
+  m_raycaster.getTextureManager().loadTexture(m_renderer.getSDLRenderer(), "barrel", "../assets/textures/barrel.bmp");
+  m_raycaster.getTextureManager().loadTexture(m_renderer.getSDLRenderer(), "bluestone", "../assets/textures/bluestone.bmp");
+  m_raycaster.getTextureManager().loadTexture(m_renderer.getSDLRenderer(), "colorstone", "../assets/textures/colorstone.bmp");
+  m_raycaster.getTextureManager().loadTexture(m_renderer.getSDLRenderer(), "eagle", "../assets/textures/eagle.bmp");
+  m_raycaster.getTextureManager().loadTexture(m_renderer.getSDLRenderer(), "greenlight", "../assets/textures/greenlight.bmp");
+  m_raycaster.getTextureManager().loadTexture(m_renderer.getSDLRenderer(), "greystone", "../assets/textures/greystone.bmp");
+  m_raycaster.getTextureManager().loadTexture(m_renderer.getSDLRenderer(), "mossy", "../assets/textures/mossy.bmp");
+  m_raycaster.getTextureManager().loadTexture(m_renderer.getSDLRenderer(), "pillar", "../assets/textures/pillar.bmp");
+  m_raycaster.getTextureManager().loadTexture(m_renderer.getSDLRenderer(), "purplestone", "../assets/textures/purplestone.bmp");
+  m_raycaster.getTextureManager().loadTexture(m_renderer.getSDLRenderer(), "redbrick", "../assets/textures/redbrick.bmp");
+  m_raycaster.getTextureManager().loadTexture(m_renderer.getSDLRenderer(), "wood", "../assets/textures/wood.bmp");
+  // ------------------------
+
   m_player.setPosition(300.0f, 300.0f);
   m_isRunning = true;
   m_previousTime = SDL_GetTicks();

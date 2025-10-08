@@ -188,12 +188,11 @@ void Raycaster::renderRays2D(SDL_Renderer *renderer) const
     rayAngle += fov / static_cast<float>(numRays);
   }
 }
-
 /**
- * @brief Renderiza a visão 3D do jogador
+ * @brief Renderiza a visão 3D do jogador com texturas
  *
- * Desenha colunas verticais representando paredes, com correção de fish-eye
- * e cores diferentes para parede, teto e chão.
+ * Desenha colunas verticais representando paredes, com correção de fish-eye,
+ * teto, chão e aplicação de texturas nos blocos.
  *
  * @param renderer Ponteiro para SDL_Renderer
  */
@@ -219,20 +218,24 @@ void Raycaster::render3DView(SDL_Renderer *renderer) const
     float distVertical = 1e6f, distHorizontal = 1e6f;
     float verticalHitX = 0.0f, verticalHitY = 0.0f;
     float horizontalHitX = 0.0f, horizontalHitY = 0.0f;
+    int verticalTileX = 0, verticalTileY = 0;
+    int horizontalTileX = 0, horizontalTileY = 0;
 
-    // Verificação de colisão vertical
+    // --------------------------
+    // Checagem vertical
+    // --------------------------
     {
       int depth = 0;
       float stepX, stepY;
 
-      if (cosf(rayAngle) > 0.001f)
+      if (cosf(rayAngle) > 0.001f) // direita
       {
         rayEndX = static_cast<float>((static_cast<int>(playerPos.x / Constants::WALL_2D_SIZE) * Constants::WALL_2D_SIZE) + Constants::WALL_2D_SIZE);
         rayEndY = playerPos.y + (rayEndX - playerPos.x) * tanValue;
         stepX = static_cast<float>(Constants::WALL_2D_SIZE);
         stepY = stepX * tanValue;
       }
-      else if (cosf(rayAngle) < -0.001f)
+      else if (cosf(rayAngle) < -0.001f) // esquerda
       {
         rayEndX = static_cast<float>((static_cast<int>(playerPos.x / Constants::WALL_2D_SIZE) * Constants::WALL_2D_SIZE) - 0.0001f);
         rayEndY = playerPos.y + (rayEndX - playerPos.x) * tanValue;
@@ -259,34 +262,35 @@ void Raycaster::render3DView(SDL_Renderer *renderer) const
             verticalHitY = rayEndY;
             distVertical = (playerPos.x - verticalHitX) * (playerPos.x - verticalHitX) +
                            (playerPos.y - verticalHitY) * (playerPos.y - verticalHitY);
+            verticalTileX = mapX;
+            verticalTileY = mapY;
             break;
           }
-          else
-          {
-            rayEndX += stepX;
-            rayEndY += stepY;
-            depth++;
-          }
+          rayEndX += stepX;
+          rayEndY += stepY;
+          depth++;
         }
         else
           break;
       }
     }
 
-    // Verificação de colisão horizontal
+    // --------------------------
+    // Checagem horizontal
+    // --------------------------
     {
       int depth = 0;
       float stepX, stepY;
       float inverseTan = 1.0f / tanValue;
 
-      if (sinf(rayAngle) > 0.001f)
+      if (sinf(rayAngle) > 0.001f) // baixo
       {
         rayEndY = static_cast<float>((static_cast<int>(playerPos.y / Constants::WALL_2D_SIZE) * Constants::WALL_2D_SIZE) + Constants::WALL_2D_SIZE);
         rayEndX = playerPos.x + (rayEndY - playerPos.y) * inverseTan;
         stepY = static_cast<float>(Constants::WALL_2D_SIZE);
         stepX = stepY * inverseTan;
       }
-      else if (sinf(rayAngle) < -0.001f)
+      else if (sinf(rayAngle) < -0.001f) // cima
       {
         rayEndY = static_cast<float>((static_cast<int>(playerPos.y / Constants::WALL_2D_SIZE) * Constants::WALL_2D_SIZE) - 0.0001f);
         rayEndX = playerPos.x + (rayEndY - playerPos.y) * inverseTan;
@@ -313,6 +317,8 @@ void Raycaster::render3DView(SDL_Renderer *renderer) const
             horizontalHitY = rayEndY;
             distHorizontal = (playerPos.x - horizontalHitX) * (playerPos.x - horizontalHitX) +
                              (playerPos.y - horizontalHitY) * (playerPos.y - horizontalHitY);
+            horizontalTileX = mapX;
+            horizontalTileY = mapY;
             break;
           }
           rayEndX += stepX;
@@ -324,45 +330,98 @@ void Raycaster::render3DView(SDL_Renderer *renderer) const
       }
     }
 
-    // Cálculo de distância final e desenho
-    float distance;
-    Uint8 wallShade;
+    // --------------------------
+    // Determina hit final e textura
+    // --------------------------
     bool isVerticalHit = (distVertical < distHorizontal);
-
-    if (isVerticalHit)
-    {
-      distance = sqrtf(distVertical);
-      wallShade = 200;
-    }
-    else
-    {
-      distance = sqrtf(distHorizontal);
-      wallShade = 255;
-    }
+    float distance = isVerticalHit ? sqrtf(distVertical) : sqrtf(distHorizontal);
+    int hitTileX = isVerticalHit ? verticalTileX : horizontalTileX;
+    int hitTileY = isVerticalHit ? verticalTileY : horizontalTileY;
 
     // Correção fish-eye
     float angleDiff = rayAngle - playerAngle;
     angleDiff = MathUtils::normalizeAngle(angleDiff);
     distance *= cosf(angleDiff);
 
+    // Altura da parede
     float lineHeight = (Constants::WALL_2D_SIZE * 320.0f) / distance;
     if (lineHeight > static_cast<float>(Constants::WINDOW_HEIGHT))
       lineHeight = static_cast<float>(Constants::WINDOW_HEIGHT);
 
     float lineOffset = (static_cast<float>(Constants::WINDOW_HEIGHT) / 2.0f) - (lineHeight / 2.0f);
 
-    // Desenho parede, teto e chão
-    SDL_SetRenderDrawColor(renderer, wallShade, wallShade, wallShade, 255);
-    SDL_Rect wallRect = {mapDisplayWidth + (rayIndex * wallStripWidth), static_cast<int>(lineOffset), wallStripWidth, static_cast<int>(lineHeight)};
-    SDL_RenderFillRect(renderer, &wallRect);
+    // --------------------------
+    // Textura da parede
+    // --------------------------
+    const std::string &textureName = m_textureManager.getTextureId(m_map.getTile(hitTileX, hitTileY));
+    SDL_Texture *wallTexture = m_textureManager.getTexture(textureName);
 
-    SDL_SetRenderDrawColor(renderer, 50, 50, 100, 255); // teto
-    SDL_Rect ceilingRect = {mapDisplayWidth + (rayIndex * wallStripWidth), 0, wallStripWidth, static_cast<int>(lineOffset)};
-    SDL_RenderFillRect(renderer, &ceilingRect);
+    if (wallTexture)
+    {
+      int texWidth, texHeight;
+      SDL_QueryTexture(wallTexture, nullptr, nullptr, &texWidth, &texHeight);
 
-    SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255); // chão
-    SDL_Rect floorRect = {mapDisplayWidth + (rayIndex * wallStripWidth), static_cast<int>(lineOffset + lineHeight), wallStripWidth, Constants::WINDOW_HEIGHT - static_cast<int>(lineOffset + lineHeight)};
-    SDL_RenderFillRect(renderer, &floorRect);
+      float hitPos = 0.0f;
+      if (isVerticalHit)
+        hitPos = verticalHitY - static_cast<int>(verticalHitY / Constants::WALL_2D_SIZE) * Constants::WALL_2D_SIZE;
+      else
+        hitPos = horizontalHitX - static_cast<int>(horizontalHitX / Constants::WALL_2D_SIZE) * Constants::WALL_2D_SIZE;
+
+      int texX = static_cast<int>((hitPos / Constants::WALL_2D_SIZE) * texWidth);
+
+      for (int y = 0; y < static_cast<int>(lineHeight); y++)
+      {
+        int texY = static_cast<int>((y / lineHeight) * texHeight);
+        SDL_Rect srcRect = {texX, texY, 1, 1};
+        SDL_Rect destRect = {mapDisplayWidth + rayIndex * wallStripWidth,
+                             static_cast<int>(lineOffset) + y,
+                             wallStripWidth,
+                             1};
+        SDL_RenderCopy(renderer, wallTexture, &srcRect, &destRect);
+      }
+    }
+
+    // --------------------------
+    // Teto
+    // --------------------------
+    SDL_Texture *ceilingTexture = m_textureManager.getTexture("wood");
+    if (ceilingTexture)
+    {
+      int texWidth, texHeight;
+      SDL_QueryTexture(ceilingTexture, nullptr, nullptr, &texWidth, &texHeight);
+
+      SDL_Rect destRect = {mapDisplayWidth + rayIndex * wallStripWidth, 0, wallStripWidth, static_cast<int>(lineOffset)};
+      for (int y = 0; y < static_cast<int>(lineOffset); y++)
+      {
+        int texY = static_cast<int>((y / lineOffset) * texHeight);
+        SDL_Rect srcRect = {0, texY, texWidth, 1};
+        SDL_Rect pixelRect = {destRect.x, y, wallStripWidth, 1};
+        SDL_RenderCopy(renderer, ceilingTexture, &srcRect, &pixelRect);
+      }
+    }
+
+    // --------------------------
+    // Chão
+    // --------------------------
+    SDL_Texture *floorTexture = m_textureManager.getTexture("colorstone");
+    if (floorTexture)
+    {
+      int texWidth, texHeight;
+      SDL_QueryTexture(floorTexture, nullptr, nullptr, &texWidth, &texHeight);
+
+      SDL_Rect destRect = {mapDisplayWidth + rayIndex * wallStripWidth, static_cast<int>(lineOffset + lineHeight),
+                           wallStripWidth, Constants::WINDOW_HEIGHT - static_cast<int>(lineOffset + lineHeight)};
+
+      int floorHeight = destRect.h;
+
+      for (int y = 0; y < floorHeight; y++)
+      {
+        int texY = static_cast<int>((y / static_cast<float>(floorHeight)) * texHeight);
+        SDL_Rect srcRect = {0, texY, texWidth, 1};
+        SDL_Rect pixelRect = {destRect.x, destRect.y + y, wallStripWidth, 1};
+        SDL_RenderCopy(renderer, floorTexture, &srcRect, &pixelRect);
+      }
+    }
 
     rayAngle += fov / static_cast<float>(numRays);
   }
